@@ -76,6 +76,11 @@
 <span><span class="co">#&gt; No vignettes found by browseVignettes("ULM")</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a>
+</h2>
+<p>This package depends on the following packages: Seurat (&gt;= 3.0.0), decoupleR, tidyverse, dplyr, stringr, igraph, ggraph, tidygraph, ggplot2, magrittr, tibble All the dependencies might be installed alongside the package.</p>
+</div>
+<div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
 <p>This is a quick example which shows how to infer physical cell-cell interaction network from a scRNAseq data:</p>
@@ -88,6 +93,20 @@
 <span><span class="va">int_sig</span> <span class="op">&lt;-</span> <span class="fu">ULM</span><span class="fu">::</span><span class="fu"><a href="reference/GetSignature.html">GetSignature</a></span><span class="op">(</span><span class="va">int_singData</span>, ident_col <span class="op">=</span> <span class="va">int_singData</span><span class="op">$</span><span class="va">Cell_Type</span>, n <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt; using the specified seurat ident to generate signatures</span></span>
 <span><span class="co">#&gt; Calculating cluster Progenitor early</span></span>
+<span><span class="co">#&gt; Warning: The `slot` argument of `GetAssayData()` is deprecated as of SeuratObject 5.0.0.</span></span>
+<span><span class="co">#&gt; ℹ Please use the `layer` argument instead.</span></span>
+<span><span class="co">#&gt; ℹ The deprecated feature was likely used in the Seurat package.</span></span>
+<span><span class="co">#&gt;   Please report the issue at &lt;https://github.com/satijalab/seurat/issues&gt;.</span></span>
+<span><span class="co">#&gt; This warning is displayed once every 8 hours.</span></span>
+<span><span class="co">#&gt; Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span>
+<span><span class="co">#&gt; generated.</span></span>
+<span><span class="co">#&gt; Warning: `PackageCheck()` was deprecated in SeuratObject 5.0.0.</span></span>
+<span><span class="co">#&gt; ℹ Please use `rlang::check_installed()` instead.</span></span>
+<span><span class="co">#&gt; ℹ The deprecated feature was likely used in the Seurat package.</span></span>
+<span><span class="co">#&gt;   Please report the issue at &lt;https://github.com/satijalab/seurat/issues&gt;.</span></span>
+<span><span class="co">#&gt; This warning is displayed once every 8 hours.</span></span>
+<span><span class="co">#&gt; Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span>
+<span><span class="co">#&gt; generated.</span></span>
 <span><span class="co">#&gt; Calculating cluster Progenitor late-1</span></span>
 <span><span class="co">#&gt; Calculating cluster Transit amplifying</span></span>
 <span><span class="co">#&gt; Calculating cluster Progenitor late-2</span></span>
