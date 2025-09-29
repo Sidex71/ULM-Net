@@ -40,7 +40,7 @@ vignettes page by running
 
 ``` r
 browseVignettes('ULM') 
-#> No vignettes found by browseVignettes("ULM")
+#> starting httpd help server ... done
 ```
 
 ## Dependencies
@@ -57,7 +57,7 @@ interaction network from a scRNAseq data:
 
 ``` r
 library(ULM)
-####load dataset
+#####load dataset
 data("int_singData")  ##int_singData is a preprocessed scRNAseq seurat object with a Cell_Type column containing cell annotations.
 ##generate signatures
 set.seed(101324)

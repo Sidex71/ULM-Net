@@ -61,7 +61,7 @@ This is a quick example which shows how to infer physical cell-cell interaction 
 
 ```{r example, fig.width=8, fig.height=6}
 library(ULM)
-####load dataset
+#####load dataset
 data("int_singData")  ##int_singData is a preprocessed scRNAseq seurat object with a Cell_Type column containing cell annotations.
 ##generate signatures
 set.seed(101324)
