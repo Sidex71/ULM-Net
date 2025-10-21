@@ -102,6 +102,10 @@ PlotNetwork(my_node_df)
 A more comprehensive guide on the usage of the ULM package can be found
 in the full tutorials below
 
+``` r
+#########################################################################################
+```
+
 ## Full Tutorials- A complete guide on the ULM Package
 
 Introduction
@@ -182,7 +186,7 @@ DimPlot(int_singData, reduction="umap", group.by="Cell_Type", label=TRUE)
 #> generated.
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" style="display: block; margin: auto;" />
 
 Now let us use the ULM pipeline to identify multiplets present in this
 data and infer physical interaction network.
@@ -567,7 +571,7 @@ Finally, we can plot the physical interaction network
 PlotNetwork(my_node_df)
 ```
 
-<img src="man/figures/README-unnamed-chunk-25-1.png" width="100%" style="display: block; margin: auto auto auto 0;" />
+<img src="man/figures/README-unnamed-chunk-27-1.png" width="100%" style="display: block; margin: auto auto auto 0;" />
 
 Indeed, we see interactions involving progenitors and other intestinal
 epithelial cells. This is biologically plausible since progenitor cells
@@ -771,7 +775,7 @@ Plotting query cell-cell interaction network
 PlotNetwork(query_network_df, node_text_size = 10, legend_text_size = 20, legend_title_size = 20, main_size = 25)
 ```
 
-<img src="man/figures/README-unnamed-chunk-39-1.png" width="100%" style="display: block; margin: auto auto auto 0;" />
+<img src="man/figures/README-unnamed-chunk-41-1.png" width="100%" style="display: block; margin: auto auto auto 0;" />
 
 THE END
 
