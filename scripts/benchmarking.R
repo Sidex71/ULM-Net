@@ -1,5 +1,38 @@
+library(decoupleR)
+library(ggplot2)
+library(tidyverse)
+library(ggpubr)
+library(caret)
+library(org.Mm.eg.db)
+library(CAMML)
+library(Neighborseq)
+#install.packages("gtools")
+library(gtools)
+library(data.table)
+library(xgboost)
+library(parallel)
+library(multiROC)
+library(RColorBrewer)
+library(DoubletFinder)
+#BiocManager::install("scDblFinder")
+library(scDblFinder)
 #################################ULM################################
+
 ##########invitro DC-T data#####################
+Idents(invitro_obj) <- invitro_obj$sorting_scheme
+###generate signature list from singlets
+invit_mark <- subset(invitro_obj, idents = c("TCRb+","CD11c+"))
+Markers <- FindAllMarkers(invit_mark, only.pos = T)
+celltypes <- unique(Markers$cluster)
+DEG_filt <-  as.list(rep(NA, length(celltypes)))
+
+for (i in 1: length(celltypes)){
+  filt <- Markers %>% filter(cluster==celltypes[i]) %>% filter(p_val_adj <0.05) %>%
+    slice_max(., order_by = avg_log2FC, n = 100) %>% pull(gene)
+  DEG_filt[[i]] <- filt
+  names(DEG_filt)[i] <- as.character(celltypes)[i]
+}
+#saveRDS(DEG_filt, 'DEG_filt_invivo.rds')
 
 mat <- as.matrix(invitro_obj@assays$RNA3@data)
 sig <- data.frame(DEG_filt)
@@ -25,7 +58,7 @@ saveRDS(invitro_obj, 'invitro_obj.rds')
 #invitro_obj@meta.data<- invitro_obj@meta.data %>% dplyr:: select(-c("count_ulm" , "celltype_ulm", "avg_pvalue", "avg_score", 'statistic'))
 
 #############################confusion matrix
-library(caret)
+
 actual <- ifelse(invitro_obj$sorting_scheme=='CD11c+' | 
                    invitro_obj$sorting_scheme=='TCRb+', 'No', 'Yes')
 predicted <- ifelse(invitro_obj$celltype_ulm=='CD11c._TCRb.', 'Yes', 'No')
@@ -35,9 +68,25 @@ matcon <-confusionMatrix(my_tab, positive = 'Yes')
 matcon
 saveRDS(matcon, 'confmat_invitro_ulm.rds')
 
-#######################ivivo DC-T################
-library("OmnipathR")
-#net <- get_collectri(organism='human', split_complexes=FALSE)
+#######################invivo DC-T################
+#####get signature list from singlets
+invivo_obj$cell_class <- str_replace(invivo_obj$sorting_scheme, 'Ag\\+ ', '') %>%
+  str_replace('CD160\\+ ', '') %>% str_replace('Icos\\+ ', '') %>%
+  str_replace('Tigit\\+ ', '')
+Idents(invivo_obj) <- invivo_obj$cell_class
+invit_mark <- subset(invivo_obj, idents = c("TCRb+","CD11c+"))
+Markers <- FindAllMarkers(invit_mark, only.pos = T)
+celltypes <- unique(Markers$cluster)
+DEG_filt <-  as.list(rep(NA, length(celltypes)))
+
+for (i in 1: length(celltypes)){
+  filt <- Markers %>% filter(cluster==celltypes[i]) %>% filter(p_val_adj <0.05) %>%
+    slice_max(., order_by = avg_log2FC, n = 100) %>% pull(gene)
+  DEG_filt[[i]] <- filt
+  names(DEG_filt)[i] <- as.character(celltypes)[i]
+}
+#saveRDS(DEG_filt, 'DEG_filt_invivo.rds')
+
 mat <- as.matrix(invivo_obj@assays$RNA3@data)
 sig <- data.frame(DEG_filt_invivo)
 sig <- pivot_longer(sig, names_to = 'source', values_to = 'target', cols = everything())
@@ -108,7 +157,6 @@ saveRDS(cell_class, 'cell_class_PairedData.rds')
 saveRDS(PairedData, 'PairedData.rds')
 
 ######################################confusion matrix
-library(caret)
 actual <- ifelse(MergedData$CellType=='Hep_Endo', 'Yes', 'No')
 predicted <- MergedData$man_pred
 my_tab <- table(actual, predicted)
@@ -119,7 +167,6 @@ man_stat <- matcon$byClass[1:4]
 
 #################################NEIGHBORSEQ############################################
 #########################################invitro DC-T data
-library(Neighborseq)
 Idents(invitro_obj)<- invitro_obj$sorting_scheme
 sing_obj <- subset(invitro_obj, idents= c('CD11c+', 'TCRb+'))
 set.seed(23042024)
@@ -128,9 +175,7 @@ ns.data = prep_cell_mat(ge = sing_obj@assays$RNA3, celltypes =sing_obj$sorting_s
 markers <- as.data.frame(ns.data$markers)
 markers_adj <- markers %>% group_by(cluster) %>% slice_max(order_by = avg_log2FC, n=50)
 ns.data$markers <- markers_adj
-#install.packages("gtools")
-library(gtools)
-library(data.table)
+
 mt = multiplet_types(ns.data$celltypes)
 #saveRDS(mt, 'mt.rds')
 am = artificial_multiplets(cell.mat = as.matrix(ns.data$cell.mat), 
@@ -138,14 +183,10 @@ am = artificial_multiplets(cell.mat = as.matrix(ns.data$cell.mat),
                            multiplet_classes = mt)
 #saveRDS(am, 'am_invitro.rds')
 
-library(xgboost)
-library(parallel)
 rf = multiplet_rf(am)
 
 #saveRDS(rf, 'rf_invitro.rds')
-library(multiROC)
 mroc = mroc_format(rf$test, rf$pred)
-library(RColorBrewer)
 mroc_plot(mroc)
 #saveRDS(mroc, 'mroc.rds')
 
@@ -180,9 +221,7 @@ ns.data = prep_cell_mat(ge = sing_obj@assays$RNA3, celltypes =sing_obj$cell_clas
 markers <- as.data.frame(ns.data$markers)
 markers_adj <- markers %>% group_by(cluster) %>% slice_max(order_by = avg_log2FC, n=50)
 ns.data$markers <- markers_adj
-#install.packages("gtools")
-library(gtools)
-library(data.table)
+
 mt = multiplet_types(ns.data$celltypes)
 #saveRDS(mt, 'mt.rds')
 am = artificial_multiplets(cell.mat = as.matrix(ns.data$cell.mat), 
@@ -190,15 +229,11 @@ am = artificial_multiplets(cell.mat = as.matrix(ns.data$cell.mat),
                            multiplet_classes = mt)
 saveRDS(am, 'am_invivo.rds')
 
-library(xgboost)
-library(parallel)
 rf = multiplet_rf(am)
 #view(rf$test)
 saveRDS(rf, 'rf_invivo.rds')
-library(multiROC)
 #> [1]  train-mlogloss:3.545750
 mroc = mroc_format(rf$test, rf$pred)
-library(RColorBrewer)
 mroc_plot(mroc)
 
 ###import all cells and predict
@@ -233,8 +268,7 @@ my_names <- my_names[my_names %in% my_genes]
 set.seed(07042024)
 ns.data$cell.mat <- HepEndData@assays$RNA3@counts[my_names,]
 #install.packages("gtools")
-library(gtools)
-library(data.table)
+
 mt = multiplet_types(ns.data$celltypes)
 #saveRDS(mt, 'mt_pairedData.rds')
 am = artificial_multiplets(cell.mat = as.matrix(ns.data$cell.mat), 
@@ -242,14 +276,11 @@ am = artificial_multiplets(cell.mat = as.matrix(ns.data$cell.mat),
                            multiplet_classes = mt)
 #saveRDS(am, 'am_pairedData.rds')
 
-library(xgboost)
-library(parallel)
+
 rf = multiplet_rf(am)
 
 #saveRDS(rf, 'rf_pairedData.rds')
-library(multiROC)
 mroc = mroc_format(rf$test, rf$pred)
-library(RColorBrewer)
 mroc_plot(mroc)
 #saveRDS(mroc, 'mroc.rds')
 
@@ -270,7 +301,6 @@ table(PairedData$CellType, PairedData$neigb)
 #########################################################invitro DC-T
 Idents(invitro_obj) <- invitro_obj$sorting_scheme
 sing_obj <- subset(invitro_obj, idents= c('CD11c+', 'TCRb+'))
-library(org.Mm.eg.db)
 my_set <- CAMML::BuildGeneSets(as.matrix(sing_obj@assays$RNA3@data), species = 'Mm', labels = sing_obj$cell_class)
 seu_score_3 <- CAMML(invitro_obj, my_set)
 CAM_score <- as.data.frame(seu_score_3@assays$CAMML$data)
@@ -329,11 +359,13 @@ table(invivo_obj$sorting_scheme, invivo_obj$Cicada)
 actual <- ifelse(invivo_obj$cell_class=='CD11c+' | 
                    invivo_obj$cell_class=='TCRb+', 'No', 'Yes')
 predicted <- ifelse(invivo_obj$Cicada=='CD11c+_TCRb+', 'Yes', 'No')
+my_tab <- table(actual, predicted)
+matcon <-confusionMatrix(my_tab, positive = 'Yes')
+matcon
+
 saveRDS(matcon, 'confmat_Cicada_invivo.rds')
 
 #######################################################Hepatocyte-endothelial data
-library(org.Mm.eg.db)
-library(CAMML)
 
 liver_sub <- subset(LiverData, downsample = 1000)
 my_set <- CAMML::BuildGeneSets(as.matrix(liver_sub@assays$RNA3@data), species = 'Mm', labels =liver_sub$CellType)
@@ -440,7 +472,7 @@ png("/mnt/8TB/users/shameed/shameed/Doublet predictions/figures/stat_invivo.png"
 p2
 dev.off()
 
-library(ggpubr)
+
 align_fig <-ggarrange(p1, p2, ncol = 2, nrow=1, common.legend = T, legend="right")
 print(align_fig)
 
@@ -481,3 +513,232 @@ p1<-ggplot(data, aes(x = Method, y = `% doublet detected`, fill = Method)) +
 png("/mnt/8TB/users/shameed/shameed/Doublet predictions/liver/plots/doub_detection_liver.png", width = 12, height = 8.5, units = 'in', res = 600)
 p1
 dev.off()
+
+###################################Doublet finder#######################
+Obj<- invitro_obj
+sweep.res.list_Obj <-DoubletFinder:: paramSweep(Obj, PCs = 1:20, sct = FALSE)
+sweep.stats_Obj <- summarizeSweep(sweep.res.list_Obj, GT = FALSE)
+bcmvn_Obj <- find.pK(sweep.stats_Obj)
+glimpse(bcmvn_Obj)
+bcmvn_Obj %>% filter(BCmetric==max(BCmetric)) ## identify pk value (0.3)
+homotypic.prop <- modelHomotypic(Obj@meta.data$sorting_scheme)
+nExp_poi <- round(0.08*nrow(Obj@meta.data))  ## Assuming 8% doublet formation rate - tailor for your dataset
+nExp_poi.adj <- round(nExp_poi*(1-homotypic.prop))
+seu_Obj <- doubletFinder(Obj, PCs = 1:20, pN = 0.25, pK = 0.3, nExp = nExp_poi, reuse.pANN = FALSE, sct = FALSE)
+table(seu_Obj$DF.classifications_0.25_0.3_798)
+DimPlot(seu_Obj, reduction = 'umap', label = T, group.by = 'DF.classifications_0.25_0.3_798')
+invitro_obj$Doublet_finder <- seu_Obj$DF.classifications_0.25_0.3_798
+invitro_obj$Doublet_finder_score <- seu_Obj$pANN_0.25_0.3_798
+saveRDS(invitro_obj, '/mnt/8TB/users/shameed/shameed/Doublet predictions/invitro_obj.rds')
+
+
+#################invivo
+Obj<- invivo_obj
+sweep.res.list_Obj <-DoubletFinder:: paramSweep(Obj, PCs = 1:20, sct = FALSE)
+sweep.stats_Obj <- summarizeSweep(sweep.res.list_Obj, GT = FALSE)
+bcmvn_Obj <- find.pK(sweep.stats_Obj)
+glimpse(bcmvn_Obj)
+bcmvn_Obj %>% filter(BCmetric==max(BCmetric)) ## identify pk value (0.19)
+homotypic.prop <- modelHomotypic(Obj@meta.data$sorting_scheme)
+nExp_poi <- round(0.07*nrow(Obj@meta.data))  ## Assuming 7% doublet formation rate - tailor for your dataset
+nExp_poi.adj <- round(nExp_poi*(1-homotypic.prop))
+seu_Obj <- doubletFinder(Obj, PCs = 1:20, pN = 0.25, pK = 0.19, nExp = nExp_poi, reuse.pANN = FALSE, sct = FALSE)
+table(seu_Obj$DF.classifications_0.25_0.19_542)
+DimPlot(seu_Obj, reduction = 'umap', label = T, group.by = 'DF.classifications_0.25_0.19_542')
+invivo_obj$Doublet_finder <- seu_Obj$DF.classifications_0.25_0.19_542
+invivo_obj$Doublet_finder_score <- seu_Obj$pANN_0.25_0.19_542
+saveRDS(invivo_obj, '/mnt/8TB/users/shameed/shameed/Doublet predictions/invivo_obj.rds')
+
+#############confusion matrix
+actual <- ifelse(invitro_obj$sorting_scheme=='CD11c+' | 
+                   invitro_obj$sorting_scheme=='TCRb+', 'No', 'Yes')
+predicted <- ifelse(invitro_obj$Doublet_finder=='Doublet', 'Yes', 'No')
+my_tab <- table(actual, predicted)
+matcon <-confusionMatrix(my_tab, positive = 'Yes')
+matcon
+saveRDS(matcon, 'confmat_DoubletFinder_invitro.rds')
+############confusion matrix
+actual <- ifelse(invivo_obj$cell_class=='CD11c+' | 
+                   invivo_obj$cell_class=='TCRb+', 'No', 'Yes')
+predicted <- ifelse(invivo_obj$Doublet_finder=='Doublet', 'Yes', 'No')
+my_tab <- table(actual, predicted)
+matcon <-confusionMatrix(my_tab, positive = 'Yes')
+matcon
+saveRDS(matcon, 'confmat_DoubletFinder_invivo.rds')
+
+
+##############################scDblFinder#########################
+sce <- as.SingleCellExperiment(invitro_obj)
+sce <- scDblFinder(sce)
+table(sce$scDblFinder.class)
+invitro_obj$scbDB_score <- sce$scDblFinder.score
+invitro_obj$scbDB_class <- sce$scDblFinder.class
+saveRDS(invitro_obj, '/mnt/8TB/users/shameed/shameed/Doublet predictions/invitro_obj.rds')
+
+###########confusion matrix
+actual <- ifelse(invitro_obj$sorting_scheme=='CD11c+' | 
+                   invitro_obj$sorting_scheme=='TCRb+', 'No', 'Yes')
+predicted <- ifelse(invitro_obj$scbDB_class=='doublet', 'Yes', 'No')
+my_tab <- table(actual, predicted)
+matcon <-confusionMatrix(my_tab, positive = 'Yes')
+matcon
+saveRDS(matcon, 'confmat_scdb_invitro.rds')
+################invivo
+library(scDblFinder)
+sce <- as.SingleCellExperiment(invivo_obj)
+sce <- scDblFinder(sce)
+table(sce$scDblFinder.class)
+invivo_obj$scbDB_score <- sce$scDblFinder.score
+invivo_obj$scbDB_class <- sce$scDblFinder.class
+
+saveRDS(invivo_obj, '/mnt/8TB/users/shameed/shameed/Doublet predictions/invivo_obj.rds')
+actual <- ifelse(invivo_obj$cell_class=='CD11c+' | 
+                   invivo_obj$cell_class=='TCRb+', 'No', 'Yes')
+predicted <- ifelse(invivo_obj$scbDB_class=='doublet', 'Yes', 'No')
+my_tab <- table(actual, predicted)
+matcon <-confusionMatrix(my_tab, positive = 'Yes')
+matcon
+saveRDS(matcon, 'confmat_scdb_invivo.rds')
+
+#####################SCRUBLET###################################
+mat <- t(invitro_obj@assays$RNA3$data)
+write.csv(mat, '/mnt/8TB/users/shameed/shameed/Doublet predictions/mat_invitro.csv')
+Scrublet_results_invitro <- read_csv("/mnt/8TB/users/shameed/shameed/Doublet predictions/Scrublet_results_invitro.csv")
+table(Scrublet_results_invivo$predicted_doublet)
+hist(Scrublet_results_invitro$doublet_score, breaks = 50,
+     main = "Scrublet Doublet Scores",
+     xlab = "Doublet Score",
+     col = "lightblue")
+
+#table(Scrublet_results_invitro$doublet_score > 0.2)
+
+scrub_invt <- Scrublet_results_invitro
+
+scrub_invt$scrublet_predic <- ifelse(scrub_invt$doublet_score > 0.2, 'doublet', 'singlet')
+invitro_obj$scrublet_score <- scrub_invt$doublet_score
+invitro_obj$scrublet_class <- scrub_invt$scrublet_predic
+
+##########confusion matrix
+actual <- ifelse(invitro_obj$sorting_scheme=='CD11c+' | 
+                   invitro_obj$sorting_scheme=='TCRb+', 'No', 'Yes')
+predicted <- ifelse(invitro_obj$scrublet_class=='doublet', 'Yes', 'No')
+my_tab <- table(actual, predicted)
+matcon <-confusionMatrix(my_tab, positive = 'Yes')
+matcon
+saveRDS(matcon, 'confmat_scrublet_invitro.rds')
+
+#########################invivo
+mat <- t(invivo_obj@assays$RNA3$data)
+write.csv(mat, '/mnt/8TB/users/shameed/shameed/Doublet predictions/mat_invivo.csv')
+Scrublet_results_invivo <- read_csv("/mnt/8TB/users/shameed/shameed/Doublet predictions/Scrublet_results_invivo.csv")
+
+hist(Scrublet_results_invivo$doublet_score, breaks = 50,
+     main = "Scrublet Doublet Scores",
+     xlab = "Doublet Score",
+     col = "lightblue")
+summary(Scrublet_results_invivo$doublet_score)
+
+#table(Scrublet_results_invivo$doublet_score > 0.2)
+
+scrub_invt <- Scrublet_results_invivo
+
+scrub_invt$scrublet_predic <- ifelse(scrub_invt$doublet_score > 0.2, 'doublet', 'singlet')
+invivo_obj$scrublet_score <- scrub_invt$doublet_score
+invivo_obj$scrublet_class <- scrub_invt$scrublet_predic
+
+################
+actual <- ifelse(invivo_obj$cell_class=='CD11c+' | 
+                   invivo_obj$cell_class=='TCRb+', 'No', 'Yes')
+predicted <- ifelse(invivo_obj$scrublet_class=='doublet', 'Yes', 'No')
+my_tab <- table(actual, predicted)
+matcon <-confusionMatrix(my_tab, positive = 'Yes')
+matcon
+saveRDS(matcon, 'confmat_scrublet_invivo.rds')
+
+###############model comparison and plotting######################
+################################################### DC-T
+conf_df <- rbind(confmat_scrublet_invitro$byClass[1:4], 
+                 confmat_DoubletFinder_invitro$byClass[1:4],
+                 confmat_scdb_invitro$byClass[1:4],
+                 confmat_invitro_ulm$byClass[1:4])
+my_meth <- c('Scrublet', 'DoubletFinder', 'scDblFinder', 'ULM')
+conf_df<- as.data.frame(conf_df)
+conf_df$Method <- my_meth
+
+conf_df <- conf_df[, c('Method', 'Sensitivity', "Specificity",  "Pos Pred Value", "Neg Pred Value")]
+colnames(conf_df) <- c('Method', 'Precision', "Neg pred",  "Sensitivity", "Specificity")
+
+############invivo
+inv_df <- rbind(confmat_scrublet_invivo$byClass[1:4], 
+                 confmat_DoubletFinder_invivo$byClass[1:4],
+                 confmat_scdb_invivo$byClass[1:4],
+                 confmat_invivo_ulm$byClass[1:4])
+my_meth <- c('Scrublet', 'DoubletFinder', 'scDblFinder', 'ULM')
+inv_df<- as.data.frame(inv_df)
+inv_df$Method <- my_meth
+
+inv_df <- inv_df[, c('Method', 'Sensitivity', "Specificity",  "Pos Pred Value", "Neg Pred Value")]
+colnames(inv_df) <- c('Method', 'Precision', "Neg pred",  "Sensitivity", "Specificity")
+
+ #############plots
+library(tidyverse)
+data <- conf_df %>% 
+  dplyr:: select(c(Method, Sensitivity, Specificity, Precision)) %>%
+  pivot_longer(cols = -c(Method), names_to = 'metrics', values_to = 'percentage') %>%
+  mutate(percentage = percentage * 100)
+
+p1<- ggplot(data, aes(x =factor(metrics, levels = c('Sensitivity', 'Precision', 'Specificity')), y = percentage, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.5) +  # Bar position dodge width should match text
+  geom_text(aes(label = round(percentage, 1)), 
+            position = position_dodge(width = 0.8),  # Ensure the same width in dodge for text
+            vjust = -0.5, size = 4.5) +  # Adjust vjust for better alignment
+  labs(title = "Performance Comparison by Method (in vitro)", y = "Percentage", x = '', fill = 'Methods') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size=18, hjust = 0.5, face = 'bold'),
+        axis.text.y = element_text(size = 18, hjust = 0.5, face = 'bold'),
+        legend.text = element_text(size = 17, hjust = 0.5, face = 'bold'),
+        legend.key.size = unit(1.5, "cm"),
+        legend.title = element_text(size = 17, hjust = 0.5, face = 'bold'),
+        axis.title.y = element_text(size = 20, hjust = 0.5, face = 'bold'),
+        plot.title = element_text(size = 25, hjust = 0.5, face = 'bold')) +
+  scale_fill_discrete(name= 'Method')
+
+#dir.create('plots')
+png("/mnt/8TB/users/shameed/shameed/Doublet predictions/figures/stat_invitro_2.png", width = 15, height = 10.5, units = 'in', res = 600)
+p1
+dev.off()
+
+##############invivo
+data <- inv_df %>% 
+  dplyr:: select(c(Method, Sensitivity, Specificity, Precision)) %>%
+  pivot_longer(cols = -c(Method), names_to = 'metrics', values_to = 'percentage') %>%
+  mutate(percentage = percentage * 100)
+
+p2<- ggplot(data, aes(x =factor(metrics, levels = c('Sensitivity', 'Precision', 'Specificity')), y = percentage, fill = Method)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.5) +  # Bar position dodge width should match text
+  geom_text(aes(label = round(percentage, 1)), 
+            position = position_dodge(width = 0.8),  # Ensure the same width in dodge for text
+            vjust = -0.5, size = 4.5) +  # Adjust vjust for better alignment
+  labs(title = "Performance Comparison by Method (in vivo)", y = "Percentage", x = '', fill = 'Methods') +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size=18, hjust = 0.5, face = 'bold'),
+        axis.text.y = element_text(size = 18, hjust = 0.5, face = 'bold'),
+        legend.text = element_text(size = 17, hjust = 0.5, face = 'bold'),
+        legend.key.size = unit(1.5, "cm"),
+        legend.title = element_text(size = 17, hjust = 0.5, face = 'bold'),
+        axis.title.y = element_text(size = 20, hjust = 0.5, face = 'bold'),
+        plot.title = element_text(size = 25, hjust = 0.5, face = 'bold')) +
+  scale_fill_discrete(name= 'Method')
+
+png("/mnt/8TB/users/shameed/shameed/Doublet predictions/figures/stat_invivo_2.png", width = 15, height = 10.5, units = 'in', res = 600)
+p2
+dev.off()
+###########
+align_fig <-ggarrange(p1, p2, ncol = 2, nrow=1, common.legend = T, legend="right")
+print(align_fig)
+
+png("/mnt/8TB/users/shameed/shameed/Doublet predictions/figures/stat_DC_T_2.png", width = 20, height = 10.5, units = 'in', res = 600)
+align_fig
+dev.off()
+
+##

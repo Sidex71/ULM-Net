@@ -50,6 +50,10 @@ png("/mnt/8TB/users/shameed/shameed/Doublet predictions/figures/UMAP_invitro.png
 p1
 dev.off()
 
+####combine plots
+Idents(invitro_obj) <- factor(invitro_obj$sorting_scheme,
+                              levels = c("CD11c+", "TCRb+", "TCRb+ CD11c+"))
+
 Markers <- c('Cd3d', 'Cd3e', 'Cd3g','Cd4', 'Trac','Cd80', 'Cd83', 'Clec7a', 'Cd86', 'H2-DMb2', 'H2-Aa', 'H2-Ab1', 'H2-Eb1')
 p1 <-DoHeatmap(invitro_obj, features = Markers, slot = 'data', label = F)
 png("/mnt/8TB/users/shameed/shameed/Doublet predictions/figures/DC_T_heatmap.png", width = 8, height = 5.5, units = 'in', res = 600)
