@@ -2,3 +2,8 @@ inst/doc
 .Rproj.user
 /Meta/
 docs
+.RData
+.Rhistory
+omnipathr-log
+scripts/omnipathr-log
+scripts/__pycache__
