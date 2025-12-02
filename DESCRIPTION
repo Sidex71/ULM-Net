@@ -33,5 +33,5 @@ Suggests:
     knitr,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
-URL: https://github.com/Sidex71/ULM-Net, https://sidex71.github.io/ULM/
+URL: https://github.com/Sidex71/ULM-Net, https://sidex71.github.io/ULM/, https://sidex71.github.io/ULMnet/
 Config/testthat/edition: 3
