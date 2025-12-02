@@ -2,4 +2,4 @@
 
 ### All vignettes
 
-- [ULMnet-vignette](https://sidex71.github.io/ULM/articles/ULMnet-vignette.md):
+- [ULMnet-vignette](https://sidex71.github.io/ULMnet/articles/ULMnet-vignette.md):
