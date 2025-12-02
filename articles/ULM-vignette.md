@@ -1,19 +1,19 @@
-# ULM-vignette
+# ULMnet-vignette
 
-Introduction ULM is a package to reconstruct physical cell-cell
+Introduction ULMnet is a package to reconstruct physical cell-cell
 interaction networks from conventional scRNAseq datasets using
-signature-based approach. Basically, ULM utilises univariate linear
+signature-based approach. Basically, ULMnet utilises univariate linear
 models to identify multiplets (mostly doublets) which potentially
 represent undissociated cell fractions that are physically connected
 cell neighbors in tissue.
 
-We first load the ULM package
+We first load the ULMnet package
 
 ``` r
-library(ULM)
+library(ULMnet)
 ```
 
-In this vignette, we first test ULM on a scRNAseq dataset of small
+In this vignette, we first test ULMnet on a scRNAseq dataset of small
 intestinal tissue (Andrews et al., 2021, pubmed: GSE175664). The
 preprocessed scRNAseq can be loaded by running this code:
 
@@ -77,8 +77,8 @@ DimPlot(int_singData, reduction="umap", group.by="Cell_Type", label=TRUE)
 
 ![](ULM-vignette_files/figure-html/unnamed-chunk-4-1.png)
 
-Now let us use the ULM pipeline to identify multiplets present in this
-data and infer physical interaction network.
+Now let us use the ULMnet pipeline to identify multiplets present in
+this data and infer physical interaction network.
 
 The first step in the pipeline is to generate cell type-specific gene
 signatures. This will generate a default of 100 genes that best mark

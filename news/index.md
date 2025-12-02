@@ -1,5 +1,5 @@
 # Changelog
 
-## ULM 0.1.0 (development version)
+## ULMnet 0.1.0 (development version)
 
 - Initial submission.

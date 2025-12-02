@@ -14,16 +14,17 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/Sidex71/ULM/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/Sidex71/ULM-Net/blob/main/DESCRIPTION)
 
-Hameed S, Iglesias-Martinez L, Kolch W, Zhernovkov V (2025). *ULM:
-Inferring Physical Cell-cell Interaction Networks from ScRNAseq Data*. R
-package version 0.1.0, <https://github.com/Sidex71/ULM>.
+Hameed S, Iglesias-Martinez L, Kolch W, Zhernovkov V (2025). *ULMnet:
+Inferring Physical Cell-cell Interaction Networks from ScRNAseq Data
+using univariate linear models*. R package version 0.1.0,
+<https://github.com/Sidex71/ULM-Net>.
 
     @Manual{,
-      title = {ULM: Inferring Physical Cell-cell Interaction Networks from ScRNAseq Data},
+      title = {ULMnet: Inferring Physical Cell-cell Interaction Networks from ScRNAseq Data using univariate linear models},
       author = {Sodiq A. Hameed and Luis F. Iglesias-Martinez and Walter Kolch and Vadim Zhernovkov},
       year = {2025},
       note = {R package version 0.1.0},
-      url = {https://github.com/Sidex71/ULM},
+      url = {https://github.com/Sidex71/ULM-Net},
     }
