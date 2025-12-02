@@ -1,116 +1,11 @@
-# ULMnet
+# ULMnet-vignette
 
-An R package for the prediction and identification of multiplets from
-scRNAseq datasets to infer physical cell-cell interaction networks.
-Multiplets occur naturally in conventional scRNAseq due to incomplete
-dissociation during library preparation. They represent cells which are
-physically connected and interacting in tissues which become sequenced
-together as they remain unseperated. ULMnet utilizes a signature-based
-approach where univariate linear models are fitted over each barcode in
-a scRNAseq data to assign signature scores. Barcodes are then classified
-as singlets or multiplets based on their signature scores. Multiplets
-are those barcodes or cells that are enriched in two or more cell
-type-specific gene signatures.
-
-![](reference/figures/algorithm.png)
-
-## Installation
-
-You can install the development version of ULMnet from
-[GitHub](https://github.com/) with:
-
-``` r
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-}
-library(devtools)
-
-devtools::install_github("Sidex71/ULMnet")
-```
-
-A full guide on the usage of ULMnet can be found in the package website,
-vignettes, or the full tutorials (see below)
-
-## Dependencies
-
-This package depends on Seurat (\>= 3.0.0), decoupleR, tidyverse, dplyr,
-stringr, igraph, ggraph, tidygraph, ggplot2, magrittr, tibble. All
-required packages might be automatically installed alongside the ULMnet
-package if not already installed.
-
-## Example
-
-This is a quick example which shows how to infer physical cell-cell
-interaction network from a scRNAseq data:
-
-``` r
-library(ULMnet)
-#####load dataset
-data("int_singData")  ##int_singData is a preprocessed scRNAseq seurat object with a Cell_Type column containing cell annotations.
-##generate signatures
-set.seed(101324)
-int_sig <- ULMnet::GetSignature(int_singData, ident_col = int_singData$Cell_Type, n = 100)
-#> using the specified seurat ident to generate signatures
-#> Calculating cluster Progenitor early
-#> Warning: The `slot` argument of `GetAssayData()` is deprecated as of SeuratObject 5.0.0.
-#> ℹ Please use the `layer` argument instead.
-#> ℹ The deprecated feature was likely used in the Seurat package.
-#>   Please report the issue at <https://github.com/satijalab/seurat/issues>.
-#> This warning is displayed once every 8 hours.
-#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-#> generated.
-#> Warning: `PackageCheck()` was deprecated in SeuratObject 5.0.0.
-#> ℹ Please use `rlang::check_installed()` instead.
-#> ℹ The deprecated feature was likely used in the Seurat package.
-#>   Please report the issue at <https://github.com/satijalab/seurat/issues>.
-#> This warning is displayed once every 8 hours.
-#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-#> generated.
-#> Calculating cluster Progenitor late-1
-#> Calculating cluster Transit amplifying
-#> Calculating cluster Progenitor late-2
-#> Calculating cluster Goblet
-#> Calculating cluster Stem
-#> Calculating cluster Enterocyte
-#> Calculating cluster Paneth
-#> Calculating cluster Enteroendocrine
-#> Calculating cluster Tuft
-
-###score cells and assign labels
-my_scores <- GetCellScores(seurat_obj = int_singData, signatures = int_sig, assay = 'RNA', layer  = 'data')
-my_assign <- GetCellAssignments(score_data = my_scores, cut_off = 1, p_val = 0.05)
-int_singData <- AddMetaObject(int_singData, cell_class_df = my_assign)
-
-#####filter multiplets
-my_mult_filt <- FilterMultiplet(int_singData, minCells = 2, minFreq = 10)
-#> Warning: Removing 1929 cells missing data for vars requested
-multSummaryFilt <- my_mult_filt$multSummaryFilt
-
-###plot network
-my_node_df <- GetNodeDF(mat = multSummaryFilt)
-PlotNetwork(my_node_df)
-```
-
-![](reference/figures/README-example-1.png)
-
-A more comprehensive guide on the usage of the ULMnet package can be
-found in the full tutorials below (check also the package vignettes or
-web article)
-
-``` r
-#########################################################################################
-```
-
-## Full Tutorials- A complete guide on the ULMnet Package
-
-Introduction
-
-ULMnet is a package to reconstruct physical cell-cell interaction
-networks from conventional scRNAseq datasets using signature-based
-approach. Basically, ULMnet utilises univariate linear models to
-identify multiplets (mostly doublets) which potentially represent
-undissociated cell fractions that are physically connected cell
-neighbors in tissue.
+Introduction ULMnet is a package to reconstruct physical cell-cell
+interaction networks from conventional scRNAseq datasets using
+signature-based approach. Basically, ULMnet utilises univariate linear
+models to identify multiplets (mostly doublets) which potentially
+represent undissociated cell fractions that are physically connected
+cell neighbors in tissue.
 
 We first load the ULMnet package
 
@@ -166,23 +61,21 @@ annotations. Let us visualize the annotated Seurat clusters
 library(Seurat)
 #> Loading required package: SeuratObject
 #> Loading required package: sp
+#> 'SeuratObject' was built under R 4.5.0 but the current version is
+#> 4.5.2; it is recomended that you reinstall 'SeuratObject' as the ABI
+#> for R may have changed
+#> 'SeuratObject' was built with package 'Matrix' 1.7.3 but the current
+#> version is 1.7.4; it is recomended that you reinstall 'SeuratObject' as
+#> the ABI for 'Matrix' may have changed
 #> 
 #> Attaching package: 'SeuratObject'
 #> The following objects are masked from 'package:base':
 #> 
 #>     intersect, t
 DimPlot(int_singData, reduction="umap", group.by="Cell_Type", label=TRUE)
-#> Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
-#> ℹ Please use tidy evaluation idioms with `aes()`.
-#> ℹ See also `vignette("ggplot2-in-packages")` for more information.
-#> ℹ The deprecated feature was likely used in the Seurat package.
-#>   Please report the issue at <https://github.com/satijalab/seurat/issues>.
-#> This warning is displayed once every 8 hours.
-#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-#> generated.
 ```
 
-![](reference/figures/README-unnamed-chunk-7-1.png)
+![](ULMnet-vignette_files/figure-html/unnamed-chunk-4-1.png)
 
 Now let us use the ULMnet pipeline to identify multiplets present in
 this data and infer physical interaction network.
@@ -196,6 +89,15 @@ set.seed(101324)
 int_sig <- GetSignature(int_singData, ident_col = int_singData$Cell_Type, n = 100)
 #> using the specified seurat ident to generate signatures
 #> Calculating cluster Progenitor early
+#> For a (much!) faster implementation of the Wilcoxon Rank Sum Test,
+#> (default method for FindMarkers) please install the presto package
+#> --------------------------------------------
+#> install.packages('devtools')
+#> devtools::install_github('immunogenomics/presto')
+#> --------------------------------------------
+#> After installation of presto, Seurat will automatically use the more 
+#> efficient implementation (no further action necessary).
+#> This message will be shown once per session
 #> Calculating cluster Progenitor late-1
 #> Calculating cluster Transit amplifying
 #> Calculating cluster Progenitor late-2
@@ -567,7 +469,7 @@ Finally, we can plot the physical interaction network
 PlotNetwork(my_node_df)
 ```
 
-![](reference/figures/README-unnamed-chunk-27-1.png)
+![](ULMnet-vignette_files/figure-html/unnamed-chunk-24-1.png)
 
 Indeed, we see interactions involving progenitors and other intestinal
 epithelial cells. This is biologically plausible since progenitor cells
@@ -771,7 +673,7 @@ Plotting query cell-cell interaction network
 PlotNetwork(query_network_df, node_text_size = 10, legend_text_size = 20, legend_title_size = 20, main_size = 25)
 ```
 
-![](reference/figures/README-unnamed-chunk-41-1.png)
+![](ULMnet-vignette_files/figure-html/unnamed-chunk-38-1.png)
 
 THE END
 
@@ -780,30 +682,3 @@ Reference
 Andrews N, Serviss JT, Geyer N, Andersson AB, Dzwonkowska E, Šutevski I,
 et al. An unsupervised method for physical cell interaction profiling of
 complex tissues. Nat Methods. 2021;18:912–20.
-
-# Package index
-
-## All functions
-
-- [`AddMetaObject()`](https://sidex71.github.io/ULM/reference/AddMetaObject.md)
-  : adding cell assignments to seurat object
-- [`FilterMultiplet()`](https://sidex71.github.io/ULM/reference/FilterMultiplet.md)
-  : filtering multiplets
-- [`GetCellAssignments()`](https://sidex71.github.io/ULM/reference/GetCellAssignments.md)
-  : getting final cell assignments
-- [`GetCellScores()`](https://sidex71.github.io/ULM/reference/GetCellScores.md)
-  : scoring cells for gene signatures
-- [`GetMultiplet()`](https://sidex71.github.io/ULM/reference/GetMultiplet.md)
-  : obtaining multiplet data
-- [`GetNodeDF()`](https://sidex71.github.io/ULM/reference/GetNodeDF.md)
-  : getting nodes and edges
-- [`GetSignature()`](https://sidex71.github.io/ULM/reference/GetSignature.md)
-  : generating gene signature
-- [`PlotNetwork()`](https://sidex71.github.io/ULM/reference/PlotNetwork.md)
-  : plotting network
-
-# Articles
-
-### All vignettes
-
-- [ULMnet-vignette](https://sidex71.github.io/ULM/articles/ULMnet-vignette.md):

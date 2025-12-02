@@ -2,8 +2,8 @@ pandoc: 3.1.11
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
-  ULM-vignette: ULM-vignette.html
-last_built: 2025-12-02T15:41Z
+  ULMnet-vignette: ULMnet-vignette.html
+last_built: 2025-12-02T16:23Z
 urls:
   reference: https://sidex71.github.io/ULM/reference
   article: https://sidex71.github.io/ULM/articles
