@@ -1,4 +1,4 @@
-Package: ULM-Net
+Package: ULMnet
 Type: Package
 Title: Inferring Physical Cell-cell Interaction Networks from ScRNAseq Data using univariate linear models
 Version: 0.1.0
